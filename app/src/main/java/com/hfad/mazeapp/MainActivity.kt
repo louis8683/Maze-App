@@ -29,7 +29,23 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private val mazeHeight = 10
     private val idForEachBlock = ArrayList<ArrayList<Int>>()
     private val currentPosition = Position(9, 9)
+    private val endPosition = Position(0, 0)
+    private val startPosition = Position(9, 9)
     private val RESULT_SPEECH = 1
+
+    private val BLOCK_ROAD = 1
+    private val BLOCK_WALL = 0
+    private val maze = listOf(
+        listOf(1,0,1,1,0,0,0,0,0,0),
+        listOf(1,0,0,1,1,1,1,1,1,1),
+        listOf(1,1,1,1,0,0,0,0,0,1),
+        listOf(0,0,0,0,0,1,1,1,1,1),
+        listOf(0,1,0,0,0,1,0,0,0,0),
+        listOf(0,1,1,1,1,1,0,0,0,0),
+        listOf(0,0,0,1,0,0,0,0,0,0),
+        listOf(0,1,0,1,1,1,1,1,1,1),
+        listOf(0,1,0,1,0,0,0,0,0,1),
+        listOf(0,1,1,1,0,0,0,0,0,1))
 
     companion object {
         private var mSpeechRecognizer: SpeechRecognizer? = null
@@ -53,8 +69,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         for (row in 0 until mazeHeight) {
             idForEachBlock.add(ArrayList())
             for (col in 0 until mazeWidth) {
-                idForEachBlock[row].add(0)
-                tableRows[row].addView(createDefaultBlock(col, row))
+                tableRows[row].addView(createDefaultBlock(col, row, maze[row][col]))
             }
         }
 
@@ -130,13 +145,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
     }
 
-    private fun createDefaultBlock(col:Int, row:Int) : TextView {
+    private fun createDefaultBlock(col:Int, row:Int, blockType: Int) : TextView {
         val textView = TextView(this)
-        textView.text = " 0 "
+        textView.text = " " + blockType.toString() + " "
         textView.id = View.generateViewId()
-        idForEachBlock[row][col] = textView.id
+        idForEachBlock[row].add(textView.id)
         if (col == currentPosition.col && row == currentPosition.row)
             textView.setBackgroundColor(Color.BLUE)
+        else if (col == endPosition.col && row == endPosition.row)
+            textView.setBackgroundColor(Color.RED)
+        else if (blockType == BLOCK_ROAD)
+            textView.setBackgroundColor(Color.GREEN)
         else
             textView.setBackgroundColor(Color.YELLOW)
         textView.setPadding(10,10,10,10)
@@ -144,37 +163,66 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun move(command: Int, steps: Int = 1) {
-        if (command == UP && currentPosition.row - steps < 0) return
-        if (command == DOWN && currentPosition.row + steps > mazeHeight-1) return
-        if (command == LEFT && currentPosition.col - steps < 0) return
-        if (command == RIGHT && currentPosition.col + steps > mazeWidth-1) return
+        if (command == UP && currentPosition.row - 1 < 0) return
+        if (command == DOWN && currentPosition.row + 1 > mazeHeight-1) return
+        if (command == LEFT && currentPosition.col - 1 < 0) return
+        if (command == RIGHT && currentPosition.col + 1 > mazeWidth-1) return
 
         val oldRow = currentPosition.row
         val oldCol = currentPosition.col
-        val oldTextView = findViewById<TextView>(idForEachBlock[oldRow][oldCol])
-        oldTextView.setBackgroundColor(Color.YELLOW)
+        //reverseBlock(oldCol, oldRow)
         when (command) {
             UP -> {
-                val newTextView = findViewById<TextView>(idForEachBlock[oldRow - steps][oldCol])
-                newTextView?.setBackgroundColor(Color.BLUE)
-                currentPosition.row -= steps
+                var tmpSteps = steps
+                while (tmpSteps > 0 && maze[currentPosition.row-1][currentPosition.col] == BLOCK_ROAD) {
+                    reverseBlock(currentPosition.col, currentPosition.row)
+                    currentPosition.row --
+                    tmpSteps --
+                    val newTextView = findViewById<TextView>(idForEachBlock[currentPosition.row][currentPosition.col])
+                    newTextView?.setBackgroundColor(Color.BLUE)
+                }
             }
             DOWN -> {
-                val newTextView = findViewById<TextView>(idForEachBlock[oldRow + steps][oldCol])
-                newTextView.setBackgroundColor(Color.BLUE)
-                currentPosition.row += steps
+                var tmpSteps = steps
+                while (tmpSteps > 0 && maze[currentPosition.row+1][currentPosition.col] == BLOCK_ROAD) {
+                    reverseBlock(currentPosition.col, currentPosition.row)
+                    currentPosition.row ++
+                    tmpSteps --
+                    val newTextView = findViewById<TextView>(idForEachBlock[currentPosition.row][currentPosition.col])
+                    newTextView?.setBackgroundColor(Color.BLUE)
+                }
             }
             LEFT -> {
-                val newTextView = findViewById<TextView>(idForEachBlock[oldRow][oldCol - steps])
-                newTextView.setBackgroundColor(Color.BLUE)
-                currentPosition.col -= steps
+                var tmpSteps = steps
+                while (tmpSteps > 0 && maze[currentPosition.row][currentPosition.col-1] == BLOCK_ROAD) {
+                    reverseBlock(currentPosition.col, currentPosition.row)
+                    currentPosition.col --
+                    tmpSteps --
+                    val newTextView = findViewById<TextView>(idForEachBlock[currentPosition.row][currentPosition.col])
+                    newTextView?.setBackgroundColor(Color.BLUE)
+                }
             }
             RIGHT -> {
-                val newTextView = findViewById<TextView>(idForEachBlock[oldRow][oldCol + steps])
-                newTextView.setBackgroundColor(Color.BLUE)
-                currentPosition.col += steps
+                var tmpSteps = steps
+                while (tmpSteps > 0 && maze[currentPosition.row][currentPosition.col+1] == BLOCK_ROAD) {
+                    reverseBlock(currentPosition.col, currentPosition.row)
+                    currentPosition.col ++
+                    tmpSteps --
+                    val newTextView = findViewById<TextView>(idForEachBlock[currentPosition.row][currentPosition.col])
+                    newTextView?.setBackgroundColor(Color.BLUE)
+                }
             }
         }
+    }
+
+    private fun reverseBlock(col:Int, row:Int) {
+        val oldTextView = findViewById<TextView>(idForEachBlock[row][col])
+        if (col == endPosition.col && row == endPosition.row)
+            oldTextView.setBackgroundColor(Color.RED)
+        else if (maze[row][col] == BLOCK_ROAD)
+            oldTextView.setBackgroundColor(Color.GREEN)
+        else
+            oldTextView.setBackgroundColor(Color.YELLOW)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
