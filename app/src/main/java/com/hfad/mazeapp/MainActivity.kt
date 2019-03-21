@@ -126,13 +126,32 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
     }
     override fun onEvent(eventType: Int, params: Bundle?) {}
-    override fun onPartialResults(partialResults: Bundle?) {}
+    override fun onPartialResults(partialResults: Bundle?) {
+        val strings = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+        if (strings != null) {
+            var outputString = ""
+            for (string in strings) {
+                if (textToCommand(string)) {
+                    outputString = string
+                    break
+                }
+            }
+            findViewById<TextView>(R.id.continuous_partial_result).text = outputString
+        }
+        mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
+    }
     override fun onReadyForSpeech(params: Bundle?) {}
     override fun onResults(results: Bundle?) {
         val strings = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         if (strings != null) {
-            textToCommand(strings[0])
-            findViewById<TextView>(R.id.continuous_partial_result).text = strings[0]
+            var outputString = ""
+            for (string in strings) {
+                if (textToCommand(string)) {
+                    outputString = string
+                    break
+                }
+            }
+            findViewById<TextView>(R.id.continuous_partial_result).text = outputString
         }
         mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
     }
@@ -239,7 +258,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    private fun textToCommand(text: String) {
+    private fun textToCommand(text: String): Boolean {
         var isValidInput = true
         var steps = 1
         if (text.contains("二") || text.contains("兩") || text.contains("2")) steps = 2
@@ -256,8 +275,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         else if (text.contains("下")) direction = DOWN
         else if (text.contains("左")) direction = LEFT
         else if (text.contains("右")) direction = RIGHT
-        else isValidInput = false
+        else return false
+
+
 
         if (isValidInput) move(direction, steps)
+        return true
     }
 }
