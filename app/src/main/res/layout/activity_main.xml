@@ -66,32 +66,31 @@
         android:id="@+id/button_listen"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Listen"
+        android:text="Manual Listen"
         android:layout_below="@+id/status"
         android:layout_centerHorizontal="true"/>
     <TextView
         android:id="@+id/title_continuous_recognition"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Continuos Recognition:"
+        android:text="Continuous Recognition:"
         android:layout_below="@+id/button_listen"
         android:layout_centerHorizontal="true" />
 
     <TextView
-        android:id="@+id/continuous_partial_result"
+        android:id="@+id/continuous_error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="(not initialized)"
+        android:text="(no previous error)"
         android:layout_below="@+id/title_continuous_recognition"
         android:layout_centerHorizontal="true" />
 
-    <Button
-        android:id="@+id/button_start_continuous"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Listen Continuously"
-        android:layout_below="@+id/continuous_partial_result"
-        android:layout_centerHorizontal="true" />
-
+    <TextView
+            android:id="@+id/continuous_partial_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="(not initialized)"
+            android:layout_below="@+id/continuous_error"
+            android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

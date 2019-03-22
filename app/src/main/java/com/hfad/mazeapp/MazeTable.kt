@@ -9,6 +9,7 @@ import android.widget.TableRow
 import android.widget.TextView
 
 class MazeTable (private val mazeHeight: Int, private val mazeWidth: Int, tableLayout: TableLayout, private val context: Context){
+    // TODO: Refactor Row, Col, Height, Width to match each other in a standard image science way.
     private val maze = listOf(
         listOf(1,0,1,1,0,0,0,0,0,0),
         listOf(1,0,0,1,1,1,1,1,1,1),
@@ -83,7 +84,7 @@ class MazeTable (private val mazeHeight: Int, private val mazeWidth: Int, tableL
         when (command) {
             UP -> {
                 var tmpSteps = steps
-                while (tmpSteps > 0 && maze[currentPosition.row-1][currentPosition.col] == BlockType.BLOCK_ROAD) {
+                while (tmpSteps > 0 && currentPosition.row-1 > 0 && maze[currentPosition.row-1][currentPosition.col] == BlockType.BLOCK_ROAD) {
                     reverseBlock(currentPosition.col, currentPosition.row)
                     currentPosition.row --
                     tmpSteps --
@@ -93,7 +94,7 @@ class MazeTable (private val mazeHeight: Int, private val mazeWidth: Int, tableL
             }
             DOWN -> {
                 var tmpSteps = steps
-                while (tmpSteps > 0 && maze[currentPosition.row+1][currentPosition.col] == BlockType.BLOCK_ROAD) {
+                while (tmpSteps > 0 && currentPosition.row+1 < mazeWidth && maze[currentPosition.row+1][currentPosition.col] == BlockType.BLOCK_ROAD) {
                     reverseBlock(currentPosition.col, currentPosition.row)
                     currentPosition.row ++
                     tmpSteps --
@@ -103,7 +104,7 @@ class MazeTable (private val mazeHeight: Int, private val mazeWidth: Int, tableL
             }
             LEFT -> {
                 var tmpSteps = steps
-                while (tmpSteps > 0 && maze[currentPosition.row][currentPosition.col-1] == BlockType.BLOCK_ROAD) {
+                while (tmpSteps > 0 && currentPosition.col-1 > 0 && maze[currentPosition.row][currentPosition.col-1] == BlockType.BLOCK_ROAD) {
                     reverseBlock(currentPosition.col, currentPosition.row)
                     currentPosition.col --
                     tmpSteps --
@@ -113,7 +114,7 @@ class MazeTable (private val mazeHeight: Int, private val mazeWidth: Int, tableL
             }
             RIGHT -> {
                 var tmpSteps = steps
-                while (tmpSteps > 0 && maze[currentPosition.row][currentPosition.col+1] == BlockType.BLOCK_ROAD) {
+                while (tmpSteps > 0 && currentPosition.col+1 < mazeHeight && maze[currentPosition.row][currentPosition.col+1] == BlockType.BLOCK_ROAD) {
                     reverseBlock(currentPosition.col, currentPosition.row)
                     currentPosition.col ++
                     tmpSteps --

@@ -16,11 +16,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private val mazeWidth = 10
     private val mazeHeight = 10
+    private lateinit var recognizerIntent: Intent
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var mIslistening: Boolean = false
 
     companion object {
-        private var mSpeechRecognizer: SpeechRecognizer? = null
-        private var mSpeechRecognizerIntent: Intent? = null
-        private var mIslistening: Boolean = false
         private const val RESULT_SPEECH = 1
     }
 
@@ -53,50 +53,43 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         // Continuous Speech Recognition
         initSpeechRecognizer()
-        // Button for backup manual listening
-        val buttonListenContinuous = findViewById<Button>(R.id.button_start_continuous)
-        buttonListenContinuous.setOnClickListener { mSpeechRecognizer?.startListening(mSpeechRecognizerIntent) }
     }
 
     // TODO: Does the recognizer still shows error when reopening the app without destroying it?
-    override fun onStop() {
-        super.onStop()
-        mSpeechRecognizer?.destroy()
-    }
-
-    override fun onRestart() {
-        super.onRestart()
-        initSpeechRecognizer()
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        mSpeechRecognizer?.destroy()
+        speechRecognizer?.destroy()
     }
 
     // Override functions for RecognizerListener
-    override fun onBeginningOfSpeech() {}
+    override fun onBeginningOfSpeech() {
+        val toast = Toast.makeText(this, "Beginning of Speech", Toast.LENGTH_SHORT)
+        toast.show()
+    }
     override fun onBufferReceived(buffer: ByteArray?) {}
-    override fun onEndOfSpeech() {}
+    override fun onEndOfSpeech() {
+        val toast = Toast.makeText(this, "End of Speech", Toast.LENGTH_SHORT)
+        toast.show()
+    }
     override fun onError(error: Int) {
-        findViewById<TextView>(R.id.continuous_partial_result).text =
-                "(Error:"+ error.toString() + ")"
-        mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
+        findViewById<TextView>(R.id.continuous_error).text =
+                "(Last Error:"+ error.toString() + ")"
+        speechRecognizer?.startListening(recognizerIntent)
     }
     override fun onEvent(eventType: Int, params: Bundle?) {}
     override fun onPartialResults(partialResults: Bundle?) {
+        val toast = Toast.makeText(this, "Partial Result", Toast.LENGTH_SHORT)
+        toast.show()
         val strings = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
         if (strings != null) {
-            var outputString = ""
             for (string in strings) {
                 if (textToCommand(string)) {
-                    outputString = string
+                    findViewById<TextView>(R.id.continuous_partial_result).text = "Partial Result: " + string
+                    speechRecognizer?.startListening(recognizerIntent)
                     break
                 }
             }
-            findViewById<TextView>(R.id.continuous_partial_result).text = outputString
         }
-        mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
     }
     override fun onReadyForSpeech(params: Bundle?) {}
     override fun onResults(results: Bundle?) {
@@ -109,17 +102,18 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     break
                 }
             }
-            findViewById<TextView>(R.id.continuous_partial_result).text = outputString
+            findViewById<TextView>(R.id.continuous_partial_result).text = "Full Result: " + outputString
         }
-        mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
+        speechRecognizer?.startListening(recognizerIntent)
     }
     override fun onRmsChanged(rmsdB: Float) {}
 
     private fun initSpeechRecognizer() {
-        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-        mSpeechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        mSpeechRecognizer?.setRecognitionListener(this)
-        mSpeechRecognizer?.startListening(mSpeechRecognizerIntent)
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        recognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        speechRecognizer?.setRecognitionListener(this)
+        speechRecognizer?.startListening(recognizerIntent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
